@@ -1,24 +1,64 @@
-<html>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
+<!DOCTYPE html>
+
+<head>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border: 0;
+            overflow: hidden;
+            display: block;
+        }
+    </style>
+</head>
+
+<canvas id="gameCanvas" style='position:absolute; left:0px; top:0px; font-size: 40pt;'></canvas>
 
 <script>
+        (function() {
+        var
+        htmlCanvas = document.getElementById('gameCanvas'),
+        context = htmlCanvas.getContext('2d');
+
+       initialize();
+
+       function initialize() {
+           window.addEventListener('resize', resizeCanvas, false);
+           resizeCanvas();
+        }
+
+        function redraw() {
+           context.strokeStyle = 'black';
+           context.lineWidth = '5';
+           context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
+        }
+
+        function resizeCanvas() {
+            htmlCanvas.width = window.innerWidth;
+            htmlCanvas.height = window.innerHeight;
+            redraw();
+        }
+    })();
+
     var canvas;
-    var canvasContext;
-    var ballX = 50;
-    var ballY = 50;
-    var ballSpeedX = 10;
-    var ballSpeedY = 4;
+    var canvasSize;
+    var circleX = 50;
+    var circleY = 50;
+    var circleSpeedX = 15;
+    var circleSpeedY = 6;
 
-    var player1Score = 0;
-    var player2Score = 0;
-    const WINNING_SCORE = 5;
+    var player1Total = 0;
+    var player2Total = 0;
+    const WINNING_TOTAL = 5;
 
-    var showingWinScreen = false;
+    var showEndScreen = false;
 
     var paddle1Y = 250;
     var paddle2Y = 250;
     const PADDLE_HEIGHT = 100;
-    const PADDLE_WIDTH = 10;
+    const PADDLE_WIDTH = 15;
 
     function calculateMousePos(evt) {
         var rect = canvas.getBoundingClientRect();
@@ -32,21 +72,21 @@
     }
 
     function handleMouseClick(evt) {
-        if (showingWinScreen) {
-            player1Score = 0;
-            player2Score = 0;
-            showingWinScreen = false;
+        if (showEndScreen) {
+            player1Total = 0;
+            player2Total = 0;
+            showEndScreen = false;
         }
     }
 
     window.onload = function () {
         canvas = document.getElementById("gameCanvas");
-        canvasContext = canvas.getContext("2d");
+        canvasSize = canvas.getContext("2d");
 
         var framesPerSecond = 30;
         setInterval(function () {
-            moveEverything();
-            drawEverything();
+            moveAll();
+            createEverything();
         }, 1000 / framesPerSecond);
 
         canvas.addEventListener('mousedown', handleMouseClick);
@@ -59,107 +99,107 @@
     }
 
     function ballReset() {
-        if (player1Score >= WINNING_SCORE || player2Score >= WINNING_SCORE) {
-            showingWinScreen = true;
+        if (player1Total >= WINNING_TOTAL || player2Total >= WINNING_TOTAL) {
+            showEndScreen = true;
         }
-        ballSpeedX = -ballSpeedX;
-        ballX = canvas.width / 2;
-        ballY = canvas.height / 2;
+        circleSpeedX = -circleSpeedX;
+        circleX = canvas.width / 2;
+        circleY = canvas.height / 2;
     }
 
     function computerMovement() {
         var paddle2YCenter = paddle2Y + (PADDLE_HEIGHT / 2);
-        if (paddle2YCenter < ballY - 35) {
+        if (paddle2YCenter < circleY - 35) {
             paddle2Y += 10;
-        } else if (paddle2YCenter > ballY + 35) {
+        } else if (paddle2YCenter > circleY + 35) {
             paddle2Y -= 10;
         }
     }
 
-    function moveEverything() {
-        if (showingWinScreen) {
+    function moveAll() {
+        if (showEndScreen) {
             return;
         }
         computerMovement();
 
-        ballX += ballSpeedX;
-        ballY += ballSpeedY;
+        circleX += (circleSpeedX);
+        circleY += (circleSpeedY);
 
-        if (ballX < 0) {
-            if (ballY > paddle1Y && ballY < paddle1Y + PADDLE_HEIGHT) {
-                ballSpeedX = -ballSpeedX;
+        if (circleX < 0) {
+            if (circleY > paddle1Y && circleY < paddle1Y + PADDLE_HEIGHT) {
+                circleSpeedX = -circleSpeedX;
 
-                var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT / 2);
-                ballSpeedY = deltaY * .35;
+                var deltaY = circleY - (paddle1Y + PADDLE_HEIGHT / 2);
+                circleSpeedY = deltaY * .35;
             } else {
-                player2Score++; //must be before ball reset
+                player2Total++; //must be before ball reset
                 ballReset();
             }
         }
-        if (ballX > canvas.width) {
-            if (ballY > paddle2Y && ballY < paddle2Y + PADDLE_HEIGHT) {
-                ballSpeedX = -ballSpeedX;
+        if (circleX > canvas.width) {
+            if (circleY > paddle2Y && circleY < paddle2Y + PADDLE_HEIGHT) {
+                circleSpeedX = -circleSpeedX;
 
-                var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT / 2);
-                ballSpeedY = deltaY * .35;
+                var deltaY = circleY - (paddle2Y + PADDLE_HEIGHT / 2);
+                circleSpeedY = deltaY * .35;
             } else {
-                player1Score++; //must be before ball reset
+                player1Total++; //must be before ball reset
                 ballReset();
             }
         }
-        if (ballY < 0) {
-            ballSpeedY = -ballSpeedY;
+        if (circleY < 0) {
+            circleSpeedY = -circleSpeedY;
         }
-        if (ballY > canvas.height) {
-            ballSpeedY = -ballSpeedY;
-        }
-    }
-
-    function drawNet(){
-        for(var i=0;i<canvas.height;i+=40){
-            colorRect(canvas.width/2-1, i, 2, 20, "green");
+        if (circleY > canvas.height) {
+            circleSpeedY = -circleSpeedY;
         }
     }
 
-    function drawEverything() {
+    function createNet() {
+        for (var i = 0; i < canvas.height; i += 40) {
+            rectangle(canvas.width / 2 - 1, i, 2, 20, "green");
+        }
+    }
+
+    function createEverything() {
         //screen shape
-        colorRect(0, 0, canvas.width, canvas.height, "black");
+        rectangle(0, 0, canvas.width, canvas.height, "black");
 
-        if (showingWinScreen) {
-            canvasContext.fillStyle = "green";
+        if (showEndScreen) {
+            canvasSize.fillStyle = "green";
 
-            if (player1Score >= WINNING_SCORE){
-                canvasContext.fillText("Left Player Wins!  " + player1Score + "-" + player2Score, canvas.width / 2.25, canvas.height / 2);
-            } else if (player2Score >= WINNING_SCORE){
-                canvasContext.fillText("Right Player Wins!  " + player2Score + "-" + player1Score, canvas.width / 2.25, canvas.height / 2);
+            if (player1Total >= WINNING_TOTAL) {
+                canvasSize.fillText("Left Player Wins!  " + player1Total + "-" + player2Total, canvas.width / 2.25, canvas.height / 2);
+            } else if (player2Total >= WINNING_TOTAL) {
+                canvasSize.fillText("Right Player Wins!  " + player2Total + "-" + player1Total, canvas.width / 2.25, canvas.height / 2);
             }
-            canvasContext.fillText("Click To Continue", canvas.width / 2.2, canvas.height - 100);
+            canvasSize.fillText("Click To Continue", canvas.width / 2.2, canvas.height - 100);
             return;
         }
 
-        drawNet();
+        createNet();
 
         //left player paddle
-        colorRect(0, paddle1Y, PADDLE_WIDTH, PADDLE_HEIGHT, "green");
+        rectangle(0, paddle1Y, PADDLE_WIDTH, PADDLE_HEIGHT, "green");
         //right AI paddle
-        colorRect(canvas.width - PADDLE_WIDTH, paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, "green");
+        rectangle(canvas.width - PADDLE_WIDTH, paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, "green");
         //ball
-        colorCircle(ballX, ballY, 10, "green")
+        circle(circleX, circleY, 10, "green")
 
-        canvasContext.fillText(player1Score, 100, 100);
-        canvasContext.fillText(player2Score, canvas.width - 100, 100);
+        canvasSize.fillText(player1Total, 100, 100);
+        canvasSize.fillText(player2Total, canvas.width - 100, 100);
     }
 
-    function colorCircle(centerX, centerY, radius, drawColor) {
-        canvasContext.fillStyle = drawColor;
-        canvasContext.beginPath();
-        canvasContext.arc(centerX, centerY, radius, 0, Math.PI * 2, true);
-        canvasContext.fill()
+    function circle(centerX, centerY, radius, drawColor) {
+        canvasSize.fillStyle = drawColor;
+        canvasSize.beginPath();
+        canvasSize.arc(centerX, centerY, radius, 0, Math.PI * 2, true);
+        canvasSize.fill()
     }
 
-    function colorRect(leftX, topY, width, height, drawColor) {
-        canvasContext.fillStyle = drawColor;
-        canvasContext.fillRect(leftX, topY, width, height);
+    function rectangle(leftX, topY, width, height, drawColor) {
+        canvasSize.fillStyle = drawColor;
+        canvasSize.fillRect(leftX, topY, width, height);
     }
 
 </script>
